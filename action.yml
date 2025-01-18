@@ -1,5 +1,5 @@
 name: 'Setup RAM Disk (Windows)'
-description: 'An action to setup high performance CI/CD storage using a RAM-backed disk on Windows. Consider using super-fast RAM-based storage if your CI/CD workflows are constrained by heavy I/O and you have enough RAM to spare.'
+description: 'An action to setup high performance CI/CD storage using a RAM-backed disk on Windows'
 author: "chad-golden"
 branding:
   icon: hard-drive
