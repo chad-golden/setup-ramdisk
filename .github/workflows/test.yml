@@ -1,0 +1,71 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/test.yml'
+      - 'scripts/**'
+      - 'action.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - windows-2019
+          - windows-2022
+          - windows-2025
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup RAM Disk
+        uses: ./
+
+      - name: Ensure RAM Disk Availibility
+        run: |
+          if (-Not (Test-Path "R:\")) {
+              throw "The path R:\ is not available."
+          } else {
+            Write-Host 'RAM disk is available! 🚀'
+          }
+
+      - name: Cleanup
+        uses: ./dismount
+
+  test-copy-workspace:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - windows-2019
+          - windows-2022
+          - windows-2025
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup RAM Disk
+        uses: ./
+        with:
+          copy-workspace: true
+
+      - name: Ensure RAM Disk Workspace Availibility
+        run: |
+          if (-Not (Test-Path "R:\workspace")) {
+              throw "The path R:\workspace is not available."
+          } else {
+            Write-Host 'RAM disk workspace is available! 🚀'
+          }
+
+      - name: Cleanup
+        uses: ./dismount

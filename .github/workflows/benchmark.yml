@@ -1,0 +1,106 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/benchmark.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DURATION: 30
+  WARMUP: 30
+  CORES: 4
+  TEST_FILE_SIZE: 10M
+
+jobs:
+  bench:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - windows-2019
+          - windows-2022
+          - windows-2025
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Setup diskspd
+        run: |
+          $client = new-object System.Net.WebClient
+          $client.DownloadFile("https://github.com/microsoft/diskspd/releases/latest/download/DiskSpd.zip","C:\DiskSpd.zip")
+          Expand-Archive -LiteralPath C:\DiskSpd.zip -DestinationPath C:\DISKSPD
+
+      - name: 'Benchmark C:'
+        id: bench-c
+        run: |
+          $output = & C:\DISKSPD\amd64\diskspd.exe -c${{ env.TEST_FILE_SIZE }} -b4K -F${{ env.CORES }} -r -o32 -W${{ env.WARMUP }} -d${{ env.DURATION }} -Sh C:\testfile.dat | Out-String
+          $iops = [regex]::Match($output, 'total:\s+\d+ \|\s+\d+ \|\s+[\d\.]+ \|\s+([\d\.]+)').Groups[1].Value
+
+          Write-Host $output
+          Write-Host "🔍 Performance Results"
+          Write-Host "===================="
+          Write-Host "📊 IOPS: $iops"
+          Write-Host "===================="
+
+          echo "IOPS=$iops" >> $env:GITHUB_OUTPUT
+
+      - name: 'Benchmark D:'
+        id: bench-d
+        run: |
+          if (-Not (Test-Path "D:\")) {
+              Write-Host "The path D:\ is not available. Skipping."
+              $iops = "N/A"
+              echo "IOPS=$iops" >> $env:GITHUB_OUTPUT
+              exit 0
+          }
+
+          $output = & C:\DISKSPD\amd64\diskspd.exe -c${{ env.TEST_FILE_SIZE }} -b4K -F${{ env.CORES }} -r -o32 -W${{ env.WARMUP }} -d${{ env.DURATION }} -Sh D:\testfile.dat | Out-String
+          $iops = [regex]::Match($output, 'total:\s+\d+ \|\s+\d+ \|\s+[\d\.]+ \|\s+([\d\.]+)').Groups[1].Value
+
+          Write-Host $output
+          Write-Host "🔍 Performance Results"
+          Write-Host "===================="
+          Write-Host "📊 IOPS: $iops"
+          Write-Host "===================="
+
+          echo "IOPS=$iops" >> $env:GITHUB_OUTPUT
+
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup RAM Disk
+        uses: ./
+
+      - name: 'Benchmark R:'
+        id: bench-r
+        run: |
+          $output = & C:\DISKSPD\amd64\diskspd.exe -c${{ env.TEST_FILE_SIZE }} -b4K -F${{ env.CORES }} -r -o32 -W${{ env.WARMUP }} -d${{ env.DURATION }} -Sh R:\testfile.dat | Out-String
+          $iops = [regex]::Match($output, 'total:\s+\d+ \|\s+\d+ \|\s+[\d\.]+ \|\s+([\d\.]+)').Groups[1].Value
+
+          Write-Host $output
+          Write-Host "🔍 Performance Results"
+          Write-Host "===================="
+          Write-Host "📊 IOPS: $iops"
+          Write-Host "===================="
+
+          echo "IOPS=$iops" >> $env:GITHUB_OUTPUT
+
+      - name: Summarize
+        shell: bash
+        run: |
+          echo "| Drive                  |     IOPS     |" >> result_table.md
+          echo "|:-----------------------|-------------:|" >> result_table.md
+          echo "| C: (OS)        | ${{ steps.bench-c.outputs.IOPS }} |" >> result_table.md
+          echo "| D: (temp)      | ${{ steps.bench-d.outputs.IOPS }} |" >> result_table.md
+          echo "| R: (RAM disk)  | ${{ steps.bench-r.outputs.IOPS }} |" >> result_table.md
+
+          echo "## Benchmark Results (${{ matrix.runs-on }}) 📊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Here are the IOPS results for each drive tested during the benchmark run:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat result_table.md >> $GITHUB_STEP_SUMMARY

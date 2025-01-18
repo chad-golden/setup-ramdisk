@@ -1,0 +1,33 @@
+name: 'Setup RAM Disk (Windows)'
+description: 'An action to setup high performance CI/CD storage using a RAM-backed disk on Windows. Consider using super-fast RAM-based storage if your CI/CD workflows are constrained by heavy I/O and you have enough RAM to spare.'
+author: "chad-golden"
+branding:
+  icon: hard-drive
+  color: red
+inputs:
+  install:
+    type: boolean
+    description: 'Installs ImDisk, if not already present'
+    default: true
+  size-in-mb:
+    type: number
+    description: 'The size of the RAM disk, in megabytes (MB). Default is 2048'
+    default: 2048
+  drive-letter:
+    type: string
+    description: 'The drive letter to use for the mounted RAM disk. Do not include the (:). Default is R'
+    default: R
+  copy-workspace:
+    type: boolean
+    description: 'Copy the workspace files to the RAM disk? Default is false'
+    default: false
+runs:
+  using: 'composite'
+  steps:
+    - shell: pwsh
+      env:
+        INSTALL_IMDISK: '${{ inputs.install }}'
+        SIZE_IN_MB: ${{ inputs.size-in-mb }}
+        DRIVE_LETTER: ${{ inputs.drive-letter }}
+        COPY_WORKSPACE: ${{ inputs.copy-workspace }}
+      run: ${{ github.action_path }}/scripts/setup.ps1
