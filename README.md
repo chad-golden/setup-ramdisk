@@ -82,3 +82,12 @@ The benchmark compares three storage options:
 - R: drive (RAM disk)
 
 View the latest benchmark results by clicking the badge above or visiting the Actions tab.
+
+### Example Benchmark Results (windows-2022) 📊
+Here are the IOPS results for each drive tested during the benchmark run:
+
+| Drive                  |     IOPS     |
+|:-----------------------|-------------:|
+| C: (OS)        | 5872.04 |
+| D: (temp)      | 6782.99 |
+| R: (RAM disk)  | 247421.30 |
