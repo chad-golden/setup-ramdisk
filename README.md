@@ -1,4 +1,5 @@
-[![Tests](https://github.com/chad-golden/setup-ramdisk/actions/workflows/test.yml/badge.svg)](https://github.com/chad-golden/setup-ramdisk/actions/workflows/test.yml)
+[![Tests](https://github.com/chad-golden/setup-ramdisk/actions/workflows/test.yml/badge.svg)](https://github.com/chad-golden/setup-ramdisk/actions/workflows/test.yml) 
+[![Benchmark](https://github.com/chad-golden/setup-ramdisk/actions/workflows/benchmark.yml/badge.svg)](https://github.com/chad-golden/setup-ramdisk/actions/workflows/benchmark.yml)
 
 # Setup RAM disk action
 An action to setup high performance CI/CD storage using a RAM-backed disk on Windows. Consider using super-fast RAM-based storage if your CI/CD workflows are constrained by heavy I/O and you have enough RAM to spare.
@@ -64,10 +65,20 @@ To clean up the RAM disk after use, add the dismount action:
   - The installation package (imdisk.zip) is verified using SHA-256: `0558DDD7B751CC29B4530E5B85F86344A4E4FA5A91D16C5479F0A4470AADEF23`
 
 ## Benchmarks
-Taken using Windows Server 2022 GitHub Hosted Runner (2 CPUs, 7GB RAM):
+[![Benchmark](https://github.com/chad-golden/setup-ramdisk/actions/workflows/benchmark.yml/badge.svg)](https://github.com/chad-golden/setup-ramdisk/actions/workflows/benchmark.yml)
 
-| Drive          | IOPS      |
-|:---------------|----------:|
-| C: (OS)        | 136.34    |
-| D: (temp)      | 8246.81   |
-| R: (RAM disk)  | 238678.40 |
+This action includes automated performance benchmarks that run on different Windows runner images. The benchmarks measure I/O performance using Microsoft's DiskSpd tool with the following parameters:
+
+- File size: 10MB
+- Block size: 4K
+- Thread count: 4
+- Queue depth: 32
+- Duration: 30 seconds (with 30 seconds warmup)
+- Random read workload
+
+The benchmark compares three storage options:
+- C: drive (OS disk)
+- D: drive (temp storage, when available)
+- R: drive (RAM disk)
+
+View the latest benchmark results by clicking the badge above or visiting the Actions tab.
